@@ -43,7 +43,13 @@ Once the cluster is created, you are ready to proceed with the setup.
 
 ## 🛠 Setup
 
-### 1. Deploy to EKS
+### 1. Build & Push the Docker Image
+```bash
+./ai-on-eks-cluster.sh build
+```
+This creates the ECR repository (if needed), builds the Docker image, and pushes it.
+
+### 2. Deploy to EKS
 ```bash
 ./ai-on-eks-cluster.sh deploy k8s/gpu-deployment.yaml
 ```
@@ -58,7 +64,7 @@ Click the URL above and try:
 
 **Note:** It might take a few minutes to load the model on first use due to the model size (~8GB), GPU initialization, CUDA kernels warm-up, and cold start on EKS.
 
-### 2. Optional: CPU Deployment
+### 3. Optional: CPU Deployment
 If you don't have GPU nodes, you can use the CPU-based deployment:
 ```bash
 ./ai-on-eks-cluster.sh deploy k8s/deployment.yaml
@@ -69,22 +75,9 @@ Get external hostname and open in browser:
 echo "http://$(kubectl get svc ai-image-generator-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
 ```
 
-### 3. Optional: Build & Push Your Own Image
-
-First, create a repository in Amazon ECR:
-
+### 4. Optional: Build with a Custom Tag
 ```bash
-AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-AWS_REGION=$(aws configure get region)
-aws ecr create-repository --repository-name ai-image-generator --region $AWS_REGION
-```
-
-Authenticate Docker with ECR, then build and push:
-
-```bash
-aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ai-image-generator:latest .
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ai-image-generator:latest
+./ai-on-eks-cluster.sh build v1.0
 ```
 
 ## 🌍 Demo Ideas

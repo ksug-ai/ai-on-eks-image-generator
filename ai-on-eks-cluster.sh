@@ -144,6 +144,29 @@ deploy() {
   echo "Deployed successfully!"
 }
 
+build() {
+  local ECR_REPO="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+  local IMAGE_TAG="${2:-latest}"
+  local IMAGE="$ECR_REPO/ai-image-generator:$IMAGE_TAG"
+
+  echo "Creating ECR repository (if it doesn't exist)..."
+  aws ecr create-repository \
+    --repository-name ai-image-generator \
+    --region "$AWS_REGION" 2>/dev/null || true
+
+  echo "Logging in to ECR..."
+  aws ecr get-login-password --region "$AWS_REGION" | \
+    docker login --username AWS --password-stdin "$ECR_REPO"
+
+  echo "Building image: $IMAGE (platform: linux/amd64)"
+  docker build --platform linux/amd64 -t "$IMAGE" .
+
+  echo "Pushing image: $IMAGE"
+  docker push "$IMAGE"
+
+  echo "✅ Image pushed successfully: $IMAGE"
+}
+
 case "$1" in
   cpu)
     start_cpu
@@ -153,6 +176,9 @@ case "$1" in
     ;;
   deploy)
     deploy "$@"
+    ;;
+  build)
+    build "$@"
     ;;
   check)
     check_gpu_availability
@@ -167,9 +193,11 @@ case "$1" in
     stop
     ;;
   *)
-    echo "Usage: $0 {cpu|gpu|deploy|check|quota|list|stop}"
+    echo "Usage: $0 {cpu|gpu|build|deploy|check|quota|list|stop}"
     echo "  cpu    - Create CPU cluster (slow inference)"
     echo "  gpu    - Create GPU cluster with NVIDIA T4 (fast inference)"
+    echo "  build  - Build and push Docker image to ECR (default tag: latest)"
+    echo "           Example: $0 build v1.0"
     echo "  deploy - Deploy manifest with variable substitution (default: k8s/gpu-deployment.yaml)"
     echo "           Example: $0 deploy k8s/deployment.yaml"
     echo "  check  - Check GPU instance availability"
