@@ -2,7 +2,7 @@
 
 # Set AWS account ID, region, and cluster name
 export AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-164018255983}"
-export AWS_REGION="${AWS_REGION:-ap-southeast-4}"
+export AWS_REGION="${AWS_REGION:-ap-southeast-2}"
 CLUSTER_NAME="ai-on-eks-image-cluster"
 
 echo "Using AWS Account: $AWS_ACCOUNT_ID, Region: $AWS_REGION"
@@ -42,7 +42,46 @@ start_cpu() {
   echo "CPU cluster created successfully in ${MINUTES}m ${SECONDS}s!"
 }
 
+check_gpu_quota() {
+  echo "Checking GPU vCPU quota in $AWS_REGION..."
+  local quota
+  quota=$(aws service-quotas get-service-quota \
+    --region "$AWS_REGION" \
+    --service-code ec2 \
+    --quota-code L-DB2E81BA \
+    --query "Quota.Value" \
+    --output text 2>/dev/null)
+
+  if [ -z "$quota" ] || [ "$quota" = "None" ]; then
+    echo "⚠️  Could not retrieve GPU quota. Proceeding anyway..."
+    return 0
+  fi
+
+  local required=4  # g4dn.xlarge has 4 vCPUs
+  echo "Current G and VT instance vCPU limit: $quota (need at least $required)"
+
+  if [ "$(echo "$quota < $required" | bc)" -eq 1 ]; then
+    echo "❌ Insufficient GPU vCPU quota ($quota < $required)."
+    echo ""
+    echo "Request an increase with:"
+    echo "  aws service-quotas request-service-quota-increase \\"
+    echo "    --region $AWS_REGION \\"
+    echo "    --service-code ec2 \\"
+    echo "    --quota-code L-DB2E81BA \\"
+    echo "    --desired-value 4"
+    echo ""
+    echo "Or visit: https://$AWS_REGION.console.aws.amazon.com/servicequotas/home/services/ec2/quotas"
+    echo "Search for 'Running On-Demand G and VT instances'"
+    exit 1
+  fi
+
+  echo "✅ GPU vCPU quota is sufficient."
+}
+
 start_gpu() {
+  # Verify GPU quota before creating the cluster
+  check_gpu_quota
+
   echo "Creating EKS cluster with GPU node group in $AWS_REGION..."
   START_TIME=$(date +%s)
 
@@ -118,6 +157,9 @@ case "$1" in
   check)
     check_gpu_availability
     ;;
+  quota)
+    check_gpu_quota
+    ;;
   list)
     list
     ;;
@@ -125,12 +167,13 @@ case "$1" in
     stop
     ;;
   *)
-    echo "Usage: $0 {cpu|gpu|deploy|check|list|stop}"
+    echo "Usage: $0 {cpu|gpu|deploy|check|quota|list|stop}"
     echo "  cpu    - Create CPU cluster (slow inference)"
     echo "  gpu    - Create GPU cluster with NVIDIA T4 (fast inference)"
     echo "  deploy - Deploy manifest with variable substitution (default: k8s/gpu-deployment.yaml)"
     echo "           Example: $0 deploy k8s/deployment.yaml"
     echo "  check  - Check GPU instance availability"
+    echo "  quota  - Check GPU vCPU quota"
     echo "  list   - List all EKS clusters"
     echo "  stop   - Delete all clusters"
     exit 1
