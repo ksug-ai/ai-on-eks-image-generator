@@ -1,6 +1,6 @@
 apiVersion: v2
 name: ai-image-generator
-description: A Helm chart for deploying AI Image Generator on GKE
+description: A Helm chart for deploying AI Image Generator on EKS
 type: application
 version: 0.1.0
 appVersion: "1.0"

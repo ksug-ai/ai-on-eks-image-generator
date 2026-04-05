@@ -1,7 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: gcr.io/PROJECT_ID/ai-image-generator
+  # Replace AWS_ACCOUNT_ID and AWS_REGION before deploying, or use: envsubst < helm/values.yaml
+  repository: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ai-image-generator
   tag: latest
   pullPolicy: IfNotPresent
 

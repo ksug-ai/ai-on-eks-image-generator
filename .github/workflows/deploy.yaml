@@ -1,8 +1,12 @@
-name: Build and Push to GAR
+name: Build and Push to ECR
 
 on:
   push:
     branches: ["main"]
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ai-image-generator
 
 jobs:
   build-and-push:
@@ -13,25 +17,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # Step 2: Authenticate to Google Cloud
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      # Step 2: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # Step 3: Install gcloud SDK
-      - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      # Step 3: Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      # Step 4: Configure Docker to use Artifact Registry
-      - name: Configure Docker auth for Artifact Registry
-        run: gcloud auth configure-docker us-docker.pkg.dev --quiet
-
-      # Step 5: Build and push image to GAR
+      # Step 4: Build and push image to ECR
       - name: Build and Push Docker image
         run: |
-          IMAGE=us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-image-generator/ai-image-generator:latest
+          IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
           docker build -t $IMAGE .
           docker push $IMAGE

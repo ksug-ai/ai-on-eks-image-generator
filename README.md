@@ -1,71 +1,76 @@
-# 🎨 AI Image Generator on GKE by [KSUG.AI](https://ksug.ai)
+# 🎨 AI Image Generator on EKS by [KSUG.AI](https://ksug.ai)
 
-This is a hands-on workshop python app that runs **Stable Diffusion** on **Google Kubernetes Engine (GKE)**.
+This is a hands-on workshop python app that runs **Stable Diffusion** on **Amazon Elastic Kubernetes Service (EKS)**.
 
 ## 🚀 Features
 - Generate AI images from text prompts
-- Runs on GKE (CPU or GPU nodes)
+- Runs on EKS (CPU or GPU nodes)
 - Scales with Kubernetes deployments
 
-**Performance:** GPU is recommended, typically an image can be generated in ~30 seconds with NVIDIA T4. For CPU, it does take 15 mins or much longer.
+**Performance:** GPU is recommended, typically an image can be generated in ~30 seconds with NVIDIA T4 (g4dn.xlarge). For CPU, it does take 15 mins or much longer.
 
 ## Prerequisites
 
-Before you begin, you need a GKE cluster with GPU nodes. You can create one using the provided script:
+- AWS CLI configured (`aws configure`)
+- `eksctl` installed
+- `kubectl` installed
+
+Create an EKS cluster with GPU nodes using the provided script:
 
 ```bash
-./ai-on-gke-cluster.sh gpu
+./ai-on-eks-cluster.sh gpu
 ```
 
-**Optional: Create a CPU-based GKE cluster:**
+**Optional: Create a CPU-based EKS cluster:**
 ```bash
-./ai-on-gke-cluster.sh cpu
+./ai-on-eks-cluster.sh cpu
 ```
 Once the cluster is created, you are ready to proceed with the setup.
 
 ## 🛠 Setup
 
-### 1. Deploy to GKE
+### 1. Deploy to EKS
 ```bash
-kubectl apply -f k8s/gpu-deployment.yaml
+./ai-on-eks-cluster.sh deploy k8s/gpu-deployment.yaml
 ```
 
-Get external IP and open in browser:
+Get external hostname and open in browser:
 ```bash
-echo "http://$(kubectl get svc ai-image-generator-gpu-svc -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+echo "http://$(kubectl get svc ai-image-generator-gpu-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
 ```
 
-Click the URL above and try:  
+Click the URL above and try:
 👉 "A kubestronaut riding a dragon in space"
 
-**Note:** It might take a few minutes to load_model for the first time use due to the fact of the model size ~8GB, GPU initialization, CUDA kernels warm-up, cold start on GKE.
+**Note:** It might take a few minutes to load the model on first use due to the model size (~8GB), GPU initialization, CUDA kernels warm-up, and cold start on EKS.
 
 ### 2. Optional: CPU Deployment
 If you don't have GPU nodes, you can use the CPU-based deployment:
 ```bash
-kubectl apply -f k8s/deployment.yaml
+./ai-on-eks-cluster.sh deploy k8s/deployment.yaml
 ```
 
-Get external IP and open in browser:
+Get external hostname and open in browser:
 ```bash
-echo "http://$(kubectl get svc ai-image-generator-svc -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+echo "http://$(kubectl get svc ai-image-generator-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
 ```
 
 ### 3. Optional: Build & Push Your Own Image
 
-First, create a repository in Artifact Registry:
+First, create a repository in Amazon ECR:
 
 ```bash
-PROJECT_ID=$(gcloud config get-value project)
-gcloud artifacts repositories create ai-image-generator --repository-format=docker --location=us-central1 --description="AI Image Generator repository"
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+AWS_REGION=$(aws configure get region)
+aws ecr create-repository --repository-name ai-image-generator --region $AWS_REGION
 ```
 
-Then, build and push your image:
+Authenticate Docker with ECR, then build and push:
 
 ```bash
-PROJECT_ID=$(gcloud config get-value project)
-docker build -t us-docker.pkg.dev/$PROJECT_ID/ai-image-generator/ai-image-generator:latest .
-docker push us-docker.pkg.dev/$PROJECT_ID/ai-image-generator/ai-image-generator:latest
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ai-image-generator:latest .
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ai-image-generator:latest
 ```
 
 ## 🌍 Demo Ideas
@@ -91,9 +96,9 @@ kubectl scale deployment ai-image-generator-cpu --replicas=2
 - **Streamlit** - Python web app framework for UI
 
 **☁️ Cloud Infrastructure:**
-- **Google Kubernetes Engine (GKE)** - Managed Kubernetes service
-- **NVIDIA T4 GPUs** - Hardware acceleration for AI inference
-- **Google Artifact Registry** - Container image storage
+- **Amazon EKS** - Managed Kubernetes service
+- **NVIDIA T4 GPUs** (g4dn instances) - Hardware acceleration for AI inference
+- **Amazon ECR** - Container image storage
 
 **🐳 Containerization:**
 - **Docker** - Application containerization
@@ -104,14 +109,15 @@ kubectl scale deployment ai-image-generator-cpu --replicas=2
 - **GitHub Actions** - CI/CD pipeline
 - **Kubernetes** - Container orchestration
 - **kubectl** - Kubernetes CLI tool
-- **gcloud** - Google Cloud CLI
+- **eksctl** - Amazon EKS CLI
+- **AWS CLI** - Amazon Web Services CLI
 
 **🔧 Development:**
 - **Bash scripting** - Cluster management automation
 - **YAML** - Kubernetes configuration
 - **Threading** - Concurrent request handling
 
-## Join the KSUG.AI Global Community  
-📍 **Meetups Around the World!**  
-📢 **Follow Us:** [https://linktr.ee/ksug.ai](https://linktr.ee/ksug.ai)  
-🌐 **Website:** [https://ksug.ai](https://ksug.ai/save)  
+## Join the KSUG.AI Global Community
+📍 **Meetups Around the World!**
+📢 **Follow Us:** [https://linktr.ee/ksug.ai](https://linktr.ee/ksug.ai)
+🌐 **Website:** [https://ksug.ai](https://ksug.ai/save)
