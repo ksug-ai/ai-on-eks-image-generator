@@ -169,7 +169,9 @@ stop() {
 deploy() {
   local manifest="${2:-k8s/gpu-deployment.yaml}"
   echo "Deploying $manifest with AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID, AWS_REGION=$AWS_REGION..."
-  envsubst < "$manifest" | kubectl apply -f -
+  sed -e "s|\${AWS_ACCOUNT_ID}|${AWS_ACCOUNT_ID}|g" \
+      -e "s|\${AWS_REGION}|${AWS_REGION}|g" \
+      "$manifest" | kubectl apply -f -
   echo "Deployed successfully!"
 }
 
