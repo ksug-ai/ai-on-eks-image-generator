@@ -14,25 +14,47 @@ This is a hands-on workshop python app that runs **Stable Diffusion** on **Amazo
 - AWS CLI configured (`aws configure`)
 - `eksctl` installed
 - `kubectl` installed
-- For GPU clusters: your account needs a vCPU quota of at least 4 for G and VT instances. Check with:
+- For GPU clusters: your account needs a vCPU quota of at least 4 for G and VT instances.
+
+  **Spot instances (default):** Check your spot quota:
+  ```bash
+  aws service-quotas get-service-quota --region $(aws configure get region) \
+    --service-code ec2 --quota-code L-3819A6DF \
+    --query "Quota.Value" --output text
+  ```
+  If the value is less than 4, request an increase:
+  ```bash
+  aws service-quotas request-service-quota-increase \
+    --region $(aws configure get region) \
+    --service-code ec2 --quota-code L-3819A6DF \
+    --desired-value 4
+  ```
+
+  **On-Demand instances:** Check your on-demand quota:
   ```bash
   aws service-quotas get-service-quota --region $(aws configure get region) \
     --service-code ec2 --quota-code L-DB2E81BA \
     --query "Quota.Value" --output text
   ```
-  If the value is 0, request an increase:
+  If the value is less than 4, request an increase:
   ```bash
   aws service-quotas request-service-quota-increase \
     --region $(aws configure get region) \
     --service-code ec2 --quota-code L-DB2E81BA \
     --desired-value 4
   ```
+
   Approval may take a few minutes to a couple of days. The script will verify this automatically before creating a GPU cluster.
 
-Create an EKS cluster with GPU nodes using the provided script:
+Create an EKS cluster with GPU nodes using the provided script (uses spot instances by default):
 
 ```bash
 ./ai-on-eks-cluster.sh gpu
+```
+
+To use on-demand instances instead:
+```bash
+USE_SPOT=false ./ai-on-eks-cluster.sh gpu
 ```
 
 **Optional: Create a CPU-based EKS cluster:**
