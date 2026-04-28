@@ -78,9 +78,10 @@ check_gpu_quota() {
   fi
 
   local required=4  # g4dn.xlarge has 4 vCPUs
+  local quota_int=${quota%.*}  # strip decimal (e.g. 4.0 -> 4)
   echo "Current $quota_label vCPU limit: $quota (need at least $required)"
 
-  if [ "$(echo "$quota < $required" | bc)" -eq 1 ]; then
+  if [ "$quota_int" -lt "$required" ]; then
     echo "❌ Insufficient GPU vCPU quota ($quota < $required)."
     echo ""
     echo "Request an increase with:"
