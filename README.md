@@ -113,6 +113,16 @@ kubectl scale deployment ai-image-generator-cpu --replicas=2
 ```
 - Run multiple prompts at once to see Kubernetes distribute load.
 
+## 🔗 How They Work Together
+
+Imagine you are building an AI Image Generator:
+
+1. **Streamlit** creates a text box where the user types "A cat in space."
+2. **Huggingface-hub** fetches the "Stable Diffusion" model files from the cloud.
+3. **Accelerate** loads those files onto your GPU efficiently.
+4. **Diffusers** processes the prompt and generates the image pixels.
+5. **Streamlit** displays the final image on the webpage.
+
 ## 🛠 Tech Stack
 
 **🤖 AI/ML:**

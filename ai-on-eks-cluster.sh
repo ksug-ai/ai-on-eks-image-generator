@@ -5,6 +5,7 @@ export AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-164018255983}"
 export AWS_REGION="${AWS_REGION:-ap-southeast-2}"
 CLUSTER_NAME="ai-on-eks-image-cluster"
 USE_SPOT="${USE_SPOT:-false}"
+K8S_VERSION="${K8S_VERSION:-1.35}"
 
 echo "Using AWS Account: $AWS_ACCOUNT_ID, Region: $AWS_REGION, Spot: $USE_SPOT"
 
@@ -32,6 +33,7 @@ start_cpu() {
   if ! eksctl create cluster \
     --name "$CLUSTER_NAME" \
     --region "$AWS_REGION" \
+    --version "$K8S_VERSION" \
     "${spot_args[@]}" \
     --nodes 1 \
     --nodes-min 1 \
@@ -107,6 +109,7 @@ start_gpu() {
   if ! eksctl create cluster \
     --name "${CLUSTER_NAME}-gpu" \
     --region "$AWS_REGION" \
+    --version "$K8S_VERSION" \
     --without-nodegroup; then
     echo "Failed to create EKS cluster"
     exit 1
@@ -231,7 +234,8 @@ case "$1" in
     echo "  stop   - Delete all clusters"
     echo ""
     echo "Environment variables:"
-    echo "  USE_SPOT=true|false  - Use spot instances (default: false)"
+    echo '  K8S_VERSION=1.35     - Kubernetes version (default: 1.35)'
+    echo '  USE_SPOT=true|false  - Use spot instances (default: false)'
     echo "           Example: USE_SPOT=true $0 gpu"
     exit 1
     ;;
