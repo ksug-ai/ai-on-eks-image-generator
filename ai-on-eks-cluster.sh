@@ -4,8 +4,9 @@
 export AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-164018255983}"
 export AWS_REGION="${AWS_REGION:-ap-southeast-2}"
 CLUSTER_NAME="ai-on-eks-image-cluster"
+USE_SPOT="${USE_SPOT:-true}"
 
-echo "Using AWS Account: $AWS_ACCOUNT_ID, Region: $AWS_REGION"
+echo "Using AWS Account: $AWS_ACCOUNT_ID, Region: $AWS_REGION, Spot: $USE_SPOT"
 
 check_gpu_availability() {
   echo "Checking GPU instance availability in $AWS_REGION..."
@@ -18,13 +19,20 @@ check_gpu_availability() {
 }
 
 start_cpu() {
-  echo "Creating CPU EKS cluster in $AWS_REGION..."
+  echo "Creating CPU EKS cluster in $AWS_REGION (spot=$USE_SPOT)..."
   START_TIME=$(date +%s)
+
+  local spot_args=()
+  if [ "$USE_SPOT" = "true" ]; then
+    spot_args=(--spot --instance-types m5.xlarge,m5a.xlarge,m4.xlarge)
+  else
+    spot_args=(--node-type m5.xlarge)
+  fi
 
   if ! eksctl create cluster \
     --name "$CLUSTER_NAME" \
     --region "$AWS_REGION" \
-    --node-type m5.xlarge \
+    "${spot_args[@]}" \
     --nodes 1 \
     --nodes-min 1 \
     --nodes-max 3 \
@@ -82,7 +90,7 @@ start_gpu() {
   # Verify GPU quota before creating the cluster
   check_gpu_quota
 
-  echo "Creating EKS cluster with GPU node group in $AWS_REGION..."
+  echo "Creating EKS cluster with GPU node group in $AWS_REGION (spot=$USE_SPOT)..."
   START_TIME=$(date +%s)
 
   # Create the base cluster first
@@ -95,11 +103,18 @@ start_gpu() {
   fi
 
   # Add a GPU node group with g4dn.xlarge (NVIDIA T4)
+  local spot_args=()
+  if [ "$USE_SPOT" = "true" ]; then
+    spot_args=(--spot --instance-types g4dn.xlarge,g4dn.2xlarge)
+  else
+    spot_args=(--node-type g4dn.xlarge)
+  fi
+
   if ! eksctl create nodegroup \
     --cluster "${CLUSTER_NAME}-gpu" \
     --region "$AWS_REGION" \
     --name gpu-nodes \
-    --node-type g4dn.xlarge \
+    "${spot_args[@]}" \
     --nodes 1 \
     --nodes-min 0 \
     --nodes-max 2 \
@@ -204,6 +219,10 @@ case "$1" in
     echo "  quota  - Check GPU vCPU quota"
     echo "  list   - List all EKS clusters"
     echo "  stop   - Delete all clusters"
+    echo ""
+    echo "Environment variables:"
+    echo "  USE_SPOT=true|false  - Use spot instances (default: true)"
+    echo "           Example: USE_SPOT=false $0 cpu"
     exit 1
     ;;
 esac

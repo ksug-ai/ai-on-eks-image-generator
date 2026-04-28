@@ -126,5 +126,7 @@ kubectl scale deployment ai-image-generator-cpu --replicas=2
 
 ## Join the KSUG.AI Global Community
 📍 **Meetups Around the World!**
-📢 **Follow Us:** [https://linktr.ee/ksug.ai](https://linktr.ee/ksug.ai)
-🌐 **Website:** [https://ksug.ai](https://ksug.ai/save)
+
+📢 **Follow Us:** [https://github.com/ksug-ai](https://github.com/ksug-ai)
+
+🌐 **Website:** [https://ksug.ai](https://ksug.ai/?ref=github)
