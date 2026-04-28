@@ -46,15 +46,15 @@ This is a hands-on workshop python app that runs **Stable Diffusion** on **Amazo
 
   Approval may take a few minutes to a couple of days. The script will verify this automatically before creating a GPU cluster.
 
-Create an EKS cluster with GPU nodes using the provided script (uses spot instances by default):
+Create an EKS cluster with GPU nodes using the provided script (uses on-demand instances by default):
 
 ```bash
 ./ai-on-eks-cluster.sh gpu
 ```
 
-To use on-demand instances instead:
+To use spot instances instead (requires spot quota approval):
 ```bash
-USE_SPOT=false ./ai-on-eks-cluster.sh gpu
+USE_SPOT=true ./ai-on-eks-cluster.sh gpu
 ```
 
 **Optional: Create a CPU-based EKS cluster:**

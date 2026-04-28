@@ -4,7 +4,7 @@
 export AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-164018255983}"
 export AWS_REGION="${AWS_REGION:-ap-southeast-2}"
 CLUSTER_NAME="ai-on-eks-image-cluster"
-USE_SPOT="${USE_SPOT:-true}"
+USE_SPOT="${USE_SPOT:-false}"
 
 echo "Using AWS Account: $AWS_ACCOUNT_ID, Region: $AWS_REGION, Spot: $USE_SPOT"
 
@@ -51,12 +51,22 @@ start_cpu() {
 }
 
 check_gpu_quota() {
-  echo "Checking GPU vCPU quota in $AWS_REGION..."
+  local quota_code
+  local quota_label
+  if [ "$USE_SPOT" = "true" ]; then
+    quota_code="L-3819A6DF"
+    quota_label="All G and VT Spot Instance Requests"
+  else
+    quota_code="L-DB2E81BA"
+    quota_label="Running On-Demand G and VT instances"
+  fi
+
+  echo "Checking GPU vCPU quota ($quota_label) in $AWS_REGION..."
   local quota
   quota=$(aws service-quotas get-service-quota \
     --region "$AWS_REGION" \
     --service-code ec2 \
-    --quota-code L-DB2E81BA \
+    --quota-code "$quota_code" \
     --query "Quota.Value" \
     --output text 2>/dev/null)
 
@@ -66,7 +76,7 @@ check_gpu_quota() {
   fi
 
   local required=4  # g4dn.xlarge has 4 vCPUs
-  echo "Current G and VT instance vCPU limit: $quota (need at least $required)"
+  echo "Current $quota_label vCPU limit: $quota (need at least $required)"
 
   if [ "$(echo "$quota < $required" | bc)" -eq 1 ]; then
     echo "❌ Insufficient GPU vCPU quota ($quota < $required)."
@@ -75,11 +85,11 @@ check_gpu_quota() {
     echo "  aws service-quotas request-service-quota-increase \\"
     echo "    --region $AWS_REGION \\"
     echo "    --service-code ec2 \\"
-    echo "    --quota-code L-DB2E81BA \\"
+    echo "    --quota-code $quota_code \\"
     echo "    --desired-value 4"
     echo ""
     echo "Or visit: https://$AWS_REGION.console.aws.amazon.com/servicequotas/home/services/ec2/quotas"
-    echo "Search for 'Running On-Demand G and VT instances'"
+    echo "Search for '$quota_label'"
     exit 1
   fi
 
@@ -221,8 +231,8 @@ case "$1" in
     echo "  stop   - Delete all clusters"
     echo ""
     echo "Environment variables:"
-    echo "  USE_SPOT=true|false  - Use spot instances (default: true)"
-    echo "           Example: USE_SPOT=false $0 cpu"
+    echo "  USE_SPOT=true|false  - Use spot instances (default: false)"
+    echo "           Example: USE_SPOT=true $0 gpu"
     exit 1
     ;;
 esac
