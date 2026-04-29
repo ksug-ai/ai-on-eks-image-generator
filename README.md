@@ -2,6 +2,8 @@
 
 This is a hands-on workshop python app that runs **Stable Diffusion** on **Amazon Elastic Kubernetes Service (EKS)**.
 
+📊 **Workshop Slides:** [View on Canva](https://canva.link/arwcqpororcotmt)
+
 ## 🚀 Features
 - Generate AI images from text prompts
 - Runs on EKS (CPU or GPU nodes)
