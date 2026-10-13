@@ -177,6 +177,11 @@ Imagine you are building an AI Image Generator:
 
 When you're done, delete all resources to avoid ongoing AWS charges.
 
+```bash
+export AWS_REGION="${AWS_DEFAULT_REGION:-ap-southeast-2}"
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+```
+
 **Delete the EKS clusters:**
 
 ```bash
@@ -190,7 +195,7 @@ This deletes both the CPU cluster (`ai-on-eks-image-cluster`) and the GPU cluste
 ```bash
 aws ecr delete-repository \
   --repository-name ai-image-generator \
-  --region $(aws configure get region) \
+  --region $AWS_REGION \
   --force
 ```
 
