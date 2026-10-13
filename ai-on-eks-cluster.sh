@@ -4,7 +4,7 @@
 export AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-164018255983}"
 export AWS_REGION="${AWS_REGION:-ap-southeast-2}"
 CLUSTER_NAME="ai-on-eks-image-cluster"
-USE_SPOT="${USE_SPOT:-false}"
+USE_SPOT="${USE_SPOT:-true}"
 K8S_VERSION="${K8S_VERSION:-1.35}"
 
 echo "Using AWS Account: $AWS_ACCOUNT_ID, Region: $AWS_REGION, Spot: $USE_SPOT"

@@ -2,7 +2,7 @@
 
 This is a hands-on workshop python app that runs **Stable Diffusion** on **Amazon Elastic Kubernetes Service (EKS)**.
 
-📊 **Workshop Slides:** [View on Canva](https://canva.link/arwcqpororcotmt)
+📊 **Workshop Slides:** [View on Canva](https://canva.link/xvzkt8z2gr93fzi)
 
 ## 🚀 Features
 - Generate AI images from text prompts
@@ -48,15 +48,15 @@ This is a hands-on workshop python app that runs **Stable Diffusion** on **Amazo
 
   Approval may take a few minutes to a couple of days. The script will verify this automatically before creating a GPU cluster.
 
-Create an EKS cluster with GPU nodes using the provided script (uses on-demand instances by default):
+Create an EKS cluster with GPU nodes using the provided script (uses **spot instances by default**):
 
 ```bash
 ./ai-on-eks-cluster.sh gpu
 ```
 
-To use spot instances instead (requires spot quota approval):
+To use on-demand instances instead:
 ```bash
-USE_SPOT=true ./ai-on-eks-cluster.sh gpu
+USE_SPOT=false ./ai-on-eks-cluster.sh gpu
 ```
 
 **Optional: Create a CPU-based EKS cluster:**
