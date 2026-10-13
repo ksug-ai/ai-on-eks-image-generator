@@ -70,8 +70,9 @@ check_kubectl() {
   if ! command -v kubectl &>/dev/null; then
     install_kubectl
   fi
-  KUBECTL_VERSION=$(kubectl version --client --short 2>/dev/null || kubectl version --client 2>&1 | head -1)
-  ok "kubectl found: $KUBECTL_VERSION"
+  local KUBECTL_RAW
+  KUBECTL_RAW=$(kubectl version --client 2>&1) || true
+  ok "kubectl found: $(echo "$KUBECTL_RAW" | head -1)"
 }
 
 # ──────────────────────────────────────────────

@@ -43,7 +43,7 @@ cd ai-on-eks-image-generator
 Run this first — it installs `eksctl` and `kubectl` if missing, verifies your AWS credentials, and checks your GPU vCPU quotas:
 
 ```bash
-chmod +x awsprep.sh && ./awsprep.sh
+./awsprep.sh
 ```
 
 > **AWS CloudShell users:** `eksctl` is not pre-installed in CloudShell. The script handles it automatically.
