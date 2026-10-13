@@ -120,11 +120,6 @@ Get external hostname and open in browser:
 echo "http://$(kubectl get svc ai-image-generator-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
 ```
 
-### 4. Optional: Build with a Custom Tag
-```bash
-./ai-on-eks-cluster.sh build v1.0
-```
-
 ## 🌍 Demo Ideas
 - Show scaling with:
 ```bash
