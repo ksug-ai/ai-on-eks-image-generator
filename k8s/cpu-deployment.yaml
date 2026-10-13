@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-image-generator
+  name: ai-image-generator-cpu
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ai-image-generator
+      app: ai-image-generator-cpu
   template:
     metadata:
       labels:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: ai-image-generator-cpu
-        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ai-image-generator:cpu-latest
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ai-image-generator:latest
         resources:
           requests:
             cpu: "1"
@@ -32,7 +32,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: ai-image-generator
+    app: ai-image-generator-cpu
   ports:
   - port: 80
     targetPort: 8080
