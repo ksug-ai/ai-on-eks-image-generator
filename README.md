@@ -11,50 +11,65 @@ This is a hands-on workshop python app that runs **Stable Diffusion** on **Amazo
 
 **Performance:** GPU is recommended, typically an image can be generated in ~30 seconds with NVIDIA T4 (g4dn.xlarge). For CPU, it does take 15 mins or much longer.
 
+## 🏁 Getting Started
+
+### Open AWS CloudShell
+
+The easiest way to run this workshop is directly in your browser — no local installs needed. The Docker image is built and pushed automatically via GitHub Actions CI/CD.
+
+1. Sign in to the [AWS Management Console](https://console.aws.amazon.com)
+2. Click the **CloudShell** icon in the top navigation bar (terminal prompt icon, next to the search bar), or go directly to [CloudShell](https://console.aws.amazon.com/cloudshell)
+3. Wait a few seconds for the shell to initialise
+
+> CloudShell comes with AWS CLI and credentials pre-configured for your account. `eksctl` is **not** pre-installed — the prep script below handles that.
+
+### Clone the repo
+
+```bash
+git clone https://github.com/ksug-ai/ai-on-eks-image-generator.git
+cd ai-on-eks-image-generator
+```
+
+---
+
 ## Prerequisites
 
-- AWS CLI configured (`aws configure`)
-- `eksctl` installed
-- `kubectl` installed
-- For GPU clusters: your account needs a vCPU quota of at least 4 for G and VT instances.
+- AWS account with CLI configured (`aws configure`)
+- `eksctl` and `kubectl` installed
+- For GPU clusters: a vCPU quota of at least 4 for G and VT spot instances in your region
 
-  **Spot instances (default):** Check your spot quota:
-  ```bash
-  aws service-quotas get-service-quota --region $(aws configure get region) \
-    --service-code ec2 --quota-code L-3819A6DF \
-    --query "Quota.Value" --output text
-  ```
-  If the value is less than 4, request an increase:
-  ```bash
-  aws service-quotas request-service-quota-increase \
-    --region $(aws configure get region) \
-    --service-code ec2 --quota-code L-3819A6DF \
-    --desired-value 4
-  ```
+### 1. Run the prep script
 
-  **On-Demand instances:** Check your on-demand quota:
-  ```bash
-  aws service-quotas get-service-quota --region $(aws configure get region) \
-    --service-code ec2 --quota-code L-DB2E81BA \
-    --query "Quota.Value" --output text
-  ```
-  If the value is less than 4, request an increase:
-  ```bash
-  aws service-quotas request-service-quota-increase \
-    --region $(aws configure get region) \
-    --service-code ec2 --quota-code L-DB2E81BA \
-    --desired-value 4
-  ```
+Run this first — it installs `eksctl` and `kubectl` if missing, verifies your AWS credentials, and checks your GPU vCPU quotas:
 
-  Approval may take a few minutes to a couple of days. The script will verify this automatically before creating a GPU cluster.
+```bash
+chmod +x awsprep.sh && ./awsprep.sh
+```
 
-Create an EKS cluster with GPU nodes using the provided script (uses **spot instances by default**):
+> **AWS CloudShell users:** `eksctl` is not pre-installed in CloudShell. The script handles it automatically.
+
+If the quota check reports a value below 4, request an increase before continuing:
+
+```bash
+# Spot instances (default)
+aws service-quotas request-service-quota-increase \
+  --region $(aws configure get region) \
+  --service-code ec2 --quota-code L-3819A6DF \
+  --desired-value 4
+```
+
+Approval can take minutes to a couple of days. The cluster script also re-checks the quota right before creating GPU nodes.
+
+### 2. Create an EKS cluster
+
+Create a GPU cluster (uses **spot instances by default**):
 
 ```bash
 ./ai-on-eks-cluster.sh gpu
 ```
 
 To use on-demand instances instead:
+
 ```bash
 USE_SPOT=false ./ai-on-eks-cluster.sh gpu
 ```
@@ -68,10 +83,19 @@ Once the cluster is created, you are ready to proceed with the setup.
 ## 🛠 Setup
 
 ### 1. Build & Push the Docker Image
+
+The Docker image is built and pushed to ECR automatically when you push to the `main` branch via **GitHub Actions**. No Docker install needed.
+
+To trigger a build, simply push your changes:
+
 ```bash
-./ai-on-eks-cluster.sh build
+git push origin main
 ```
-This creates the ECR repository (if needed), builds the Docker image, and pushes it.
+
+> To build and push manually (requires Docker locally):
+> ```bash
+> ./ai-on-eks-cluster.sh build
+> ```
 
 ### 2. Deploy to EKS
 ```bash
@@ -142,7 +166,6 @@ Imagine you are building an AI Image Generator:
 - **Amazon ECR** - Container image storage
 
 **🐳 Containerization:**
-- **Docker** - Application containerization
 - **Python 3.10** - Runtime environment
 - **CUDA 11.8** - GPU computing platform
 
@@ -158,8 +181,33 @@ Imagine you are building an AI Image Generator:
 - **YAML** - Kubernetes configuration
 - **Threading** - Concurrent request handling
 
+## 🧹 Cleanup
+
+When you're done, delete all resources to avoid ongoing AWS charges.
+
+**Delete the EKS clusters:**
+
+```bash
+./ai-on-eks-cluster.sh stop
+```
+
+This deletes both the CPU cluster (`ai-on-eks-image-cluster`) and the GPU cluster (`ai-on-eks-image-cluster-gpu`) if they exist, including their node groups and associated CloudFormation stacks.
+
+**Delete the ECR repository:**
+
+```bash
+aws ecr delete-repository \
+  --repository-name ai-image-generator \
+  --region $(aws configure get region) \
+  --force
+```
+
+> The `--force` flag removes all images inside the repository before deleting it.
+
+---
+
 ## Join the KSUG.AI Global Community
-📍 **Meetups Around the World!**
+📍 **250,000+ professionals Around the World!**
 
 📢 **Follow Us:** [https://github.com/ksug-ai](https://github.com/ksug-ai)
 

@@ -189,18 +189,6 @@ check_vcpu_quota() {
   fi
 }
 
-# ──────────────────────────────────────────────
-# 5. docker — informational only (not in CloudShell)
-# ──────────────────────────────────────────────
-check_docker() {
-  info "Checking Docker (required for 'build' step only)..."
-  if ! command -v docker &>/dev/null; then
-    warn "Docker not found. It is only needed for './ai-on-eks-cluster.sh build'."
-    warn "If you are using AWS CloudShell, use GitHub Actions (CI/CD) to build and push images instead."
-  else
-    ok "Docker found: $(docker --version)"
-  fi
-}
 
 # ──────────────────────────────────────────────
 # Main
@@ -217,8 +205,6 @@ echo ""
 check_eksctl
 echo ""
 check_vcpu_quota
-echo ""
-check_docker
 echo ""
 
 echo "======================================"
