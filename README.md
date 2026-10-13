@@ -92,18 +92,7 @@ Once the cluster is created, you are ready to proceed with the setup.
 
 ### 1. Build & Push the Docker Image
 
-The Docker image is built and pushed to ECR automatically when you push to the `main` branch via **GitHub Actions**. No Docker install needed.
-
-To trigger a build, simply push your changes:
-
-```bash
-git push origin main
-```
-
-> To build and push manually (requires Docker locally):
-> ```bash
-> ./ai-on-eks-cluster.sh build
-> ```
+The Docker image is built and pushed to ECR automatically when you push to the `main` branch via **GitHub Actions**.
 
 ### 2. Deploy to EKS
 ```bash
