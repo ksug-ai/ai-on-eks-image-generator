@@ -82,7 +82,8 @@ To use on-demand instances instead:
 USE_SPOT=false ./ai-on-eks-cluster.sh gpu
 ```
 
-**Optional: Create a CPU-based EKS cluster:**
+**Optional: Create a CPU-based EKS cluster** (uses spot instances by default, same as GPU):
+
 ```bash
 ./ai-on-eks-cluster.sh cpu
 ```
@@ -112,7 +113,7 @@ Click the URL above and try:
 ### 3. Optional: CPU Deployment
 If you don't have GPU nodes, you can use the CPU-based deployment:
 ```bash
-./ai-on-eks-cluster.sh deploy k8s/deployment.yaml
+./ai-on-eks-cluster.sh deploy k8s/cpu-deployment.yaml
 ```
 
 Get external hostname and open in browser:

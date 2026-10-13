@@ -230,7 +230,7 @@ case "$1" in
     echo "  build  - Build and push Docker image to ECR (default tag: latest)"
     echo "           Example: $0 build v1.0"
     echo "  deploy - Deploy manifest with variable substitution (default: k8s/gpu-deployment.yaml)"
-    echo "           Example: $0 deploy k8s/deployment.yaml"
+    echo "           Example: $0 deploy k8s/cpu-deployment.yaml"
     echo "  check  - Check GPU instance availability"
     echo "  quota  - Check GPU vCPU quota"
     echo "  list   - List all EKS clusters"
