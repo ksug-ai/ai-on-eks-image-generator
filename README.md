@@ -58,6 +58,14 @@ aws service-quotas request-service-quota-increase \
   --desired-value 4
 ```
 
+```bash
+# On-demand instances (USE_SPOT=false)
+aws service-quotas request-service-quota-increase \
+  --region $(aws configure get region) \
+  --service-code ec2 --quota-code L-DB2E81BA \
+  --desired-value 4
+```
+
 Approval can take minutes to a couple of days. The cluster script also re-checks the quota right before creating GPU nodes.
 
 ### 2. Create an EKS cluster
